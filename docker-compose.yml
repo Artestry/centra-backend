@@ -1,0 +1,28 @@
+services:
+  centra-backend:
+    image: ghcr.io/artestry/centra-backend:latest
+    container_name: centra-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "file:/data/centrapath.db"
+      PORT: "3000"
+      NODE_ENV: "production"
+      BETTER_AUTH_URL: "https://api.centrapath.app"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
+      RESEND_API_KEY: "${RESEND_API_KEY}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      REVENUECAT_WEBHOOK_SECRET: "${REVENUECAT_WEBHOOK_SECRET}"
+      EMAIL_FROM: "Centra Path <onboarding@centrapath.app>"
+      STORAGE_DIR: "/data/storage"
+    volumes:
+      - centra_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.centra-backend.rule=Host(`api.centrapath.app`)"
+      - "traefik.http.routers.centra-backend.entrypoints=websecure"
+      - "traefik.http.routers.centra-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.centra-backend.loadbalancer.server.port=3000"
+
+volumes:
+  centra_data:
+    name: centra_backend_data

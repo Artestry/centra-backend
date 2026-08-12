@@ -17,6 +17,9 @@ import { env } from "./env.js";
  * - The expo plugin registers the trusted origins (URL schemes) and helpers
  *   needed for cookie/session handling on the React Native client. The mobile
  *   app uses scheme "centrapath" plus the Expo Go "exp://" scheme during dev.
+ * - CSRF is disabled: this is a mobile-only API (React Native does not send
+ *   Origin headers like browsers do, so CSRF protection provides no benefit
+ *   and blocks legitimate mobile requests).
  */
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -24,12 +27,19 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "sqlite",
   }),
+  advanced: {
+    // Mobile API — React Native clients don't send Origin headers so Better
+    // Auth's CSRF check blocks every POST. Safe to disable on a non-browser API.
+    disableCSRFCheck: true,
+  },
   // Allow the Expo client's deep-link schemes through Better Auth's
-  // origin checks. Add additional schemes here when you ship native builds.
-  trustedOrigins:
-    env.NODE_ENV === "development"
-      ? ["centrapath://", "exp://"]
-      : ["centrapath://"],
+  // origin checks. Include both the production scheme and common dev schemes.
+  trustedOrigins: [
+    env.BETTER_AUTH_URL,   // https://api.centrapath.app
+    "centrapath://",       // production iOS/Android deep-link scheme
+    "vibecode://",         // Vibecode-built app scheme
+    "exp://",              // Expo Go (development)
+  ],
   session: {
     cookieCache: {
       enabled: true,

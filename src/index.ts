@@ -34,8 +34,9 @@ app.use(
   })
 );
 
-// Better Auth handler — mounted at /api/auth (no session middleware here)
-app.on(["GET", "POST"], "/api/auth/**", (c) => {
+// Better Auth handler — mounted at /api/auth (no session middleware here).
+// Use app.all with /* (not **) for compatibility with bun 1.2 in the container.
+app.all("/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 

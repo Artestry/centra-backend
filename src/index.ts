@@ -45,8 +45,13 @@ app.route("/api/health", health);
 // Webhook endpoints don't use cookie-based session middleware
 app.route("/api/webhooks", webhooks);
 
-// Apply session middleware to all remaining /api/* routes
-app.use("/api/*", sessionMiddleware);
+// Apply session middleware to all /api/* routes EXCEPT /api/auth/**
+// In Hono, app.use() runs before matched route handlers for the same path,
+// so we must explicitly skip the auth routes to let Better Auth handle them.
+app.use("/api/*", async (c, next) => {
+  if (c.req.path.startsWith("/api/auth")) return next();
+  return sessionMiddleware(c, next);
+});
 app.route("/api/profile", profile);
 app.route("/api/experience", experience);
 app.route("/api/education", education);

@@ -25,13 +25,23 @@ export async function sendOtpEmail(
 
   const client = getResendClient();
 
-  await client.emails.send({
+  // Resend's SDK does NOT throw on API errors — it returns { data, error }.
+  // Check explicitly so a rejected send (bad key, unverified domain) is loud
+  // in the logs instead of a silent fake success.
+  const { data, error } = await client.emails.send({
     from: env.EMAIL_FROM,
     to: email,
     subject: "Your Centra Path verification code",
     html: buildOtpEmailHtml(otp),
     text: buildOtpEmailText(otp),
   });
+
+  if (error) {
+    console.error(`Resend send failed for ${email}:`, JSON.stringify(error));
+    throw new Error(`Failed to send OTP email: ${error.message}`);
+  }
+
+  console.log(`OTP email sent to ${email} (resend id: ${data?.id})`);
 }
 
 function buildOtpEmailHtml(otp: string): string {

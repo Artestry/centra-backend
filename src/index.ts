@@ -54,6 +54,7 @@ app.use("/api/*", async (c, next) => {
   return sessionMiddleware(c, next);
 });
 app.route("/api/profile", profile);
+
 app.route("/api/experience", experience);
 app.route("/api/education", education);
 app.route("/api/skills", skills);
